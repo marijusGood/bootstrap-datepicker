@@ -112,6 +112,25 @@ A function that takes a date as a parameter and returns one of the following val
    * ``tooltip``: a tooltip to apply to this year, via the ``title`` HTML attribute
 
 
+afterInputChange
+----------------
+
+Function(inputChange, dateOld, dateNew). Default: $.noop
+
+A function that is called after the input value of the datepicker has changed. It takes three parameters:
+
+* inputChange: A string that indicates the part of the date that was changed. For example, 'year', 'month', 'day'.
+* dateOld: The old date value before the change.
+* dateNew: The new date value after the change.
+
+This function can be used to perform custom operations after the datepicker's input has been changed. For example, you can use it to call a custom function:
+
+```javascript
+afterInputChange: function(inputChange, dateOld, dateNew){
+    customFunc(inputChange, dateOld, dateNew);
+}
+```
+
 calendarWeeks
 -------------
 
