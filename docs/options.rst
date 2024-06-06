@@ -586,4 +586,5 @@ todayHighlight               false
 toggleActive                 false
 weekStart                    0 (Sunday)
 zIndexOffset                 10
+afterInputChange
 =====================        =============

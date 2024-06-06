@@ -1861,8 +1861,8 @@
 				setters_order = ['yyyy', 'yy', 'M', 'MM', 'm', 'mm', 'd', 'dd'],
 				setters_map = {
 					yyyy: function(d,v){
-						const updatedYear = d.setUTCFullYear(assumeNearby ? applyNearbyYear(v, assumeNearby) : v);
-						let updatedYearValue = new Date(updatedYear).getFullYear();
+						var updatedYear = d.setUTCFullYear(assumeNearby ? applyNearbyYear(v, assumeNearby) : v);
+						var updatedYearValue = new Date(updatedYear).getFullYear();
 						if (afterInputChange !== $.noop && v !== updatedYearValue){
 							afterInputChange('year', v, new Date(updatedYear).getFullYear());
 						}
@@ -1881,15 +1881,15 @@
 						d.setUTCMonth(v);
 						while (d.getUTCMonth() !== v)
 							d.setUTCDate(d.getUTCDate()-1);
-						let updatedMonth = new Date(d).getMonth();
+						var updatedMonth = new Date(d).getMonth();
 						if (afterInputChange !== $.noop && v !== updatedMonth){
 							afterInputChange('month', v+1, new Date(d).getMonth()+1);
 						}
 						return d;
 					},
 					d: function(d,v){
-						const updatedDate = d.setUTCDate(v);
-						let updatedDay = new Date(updatedDate).getDate();
+						var updatedDate = d.setUTCDate(v);
+						var updatedDay = new Date(updatedDate).getDate();
 						if (afterInputChange !== $.noop && v !== updatedDay){
 							afterInputChange('date', v, new Date(updatedDate).getDate());
 						}
