@@ -1904,7 +1904,9 @@
 					if (isNaN(val)){
 						if (part === 'mm' && monthNameToNumber) {
 							filtered = $(dates[language].monthsShort).filter(match_part);
-							val = $.inArray(filtered[0], dates[language].monthsShort) + 1;
+							if (filtered[0] !== undefined) {
+								val = $.inArray(filtered[0], dates[language].monthsShort) + 1;
+							}
 						}
 						switch (part){
 							case 'MM':
