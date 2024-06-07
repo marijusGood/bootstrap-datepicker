@@ -1864,14 +1864,14 @@
 						var updatedYear = d.setUTCFullYear(assumeNearby ? applyNearbyYear(v, assumeNearby) : v);
 						var updatedYearValue = new Date(updatedYear).getFullYear();
 						if (afterInputChange !== $.noop && v !== updatedYearValue){
-							afterInputChange('year', v, new Date(updatedYear).getFullYear());
+							afterInputChange('yyyy', v, new Date(updatedYear).getFullYear());
 						}
 						return updatedYear;
 					},
 					m: function(d,v){
 						if (isNaN(d)) {
 							if (afterInputChange !== $.noop){
-								afterInputChange('month', v, new Date(d).getDay());
+								afterInputChange('m', v, new Date(d).getDay());
 							}
 							return d;
 						}
@@ -1883,7 +1883,7 @@
 							d.setUTCDate(d.getUTCDate()-1);
 						var updatedMonth = new Date(d).getMonth();
 						if (afterInputChange !== $.noop && v !== updatedMonth){
-							afterInputChange('month', v+1, new Date(d).getMonth()+1);
+							afterInputChange('m', v+1, new Date(d).getMonth()+1);
 						}
 						return d;
 					},
@@ -1891,7 +1891,7 @@
 						var updatedDate = d.setUTCDate(v);
 						var updatedDay = new Date(updatedDate).getDate();
 						if (afterInputChange !== $.noop && v !== updatedDay){
-							afterInputChange('date', v, new Date(updatedDate).getDate());
+							afterInputChange('d', v, new Date(updatedDate).getDate());
 						}
 						return updatedDate;
 					}
@@ -1914,6 +1914,18 @@
 					p = parts[i].slice(0, m.length);
 				return m.toLowerCase() === p.toLowerCase();
 			}
+
+			var datePartGetters = {
+				'yyyy': function(date) { return date.getFullYear(); },
+				'yy': function(date) { return date.getFullYear().toString().substr(-2); },
+				'MM': function(date) { return date.getMonth() + 1; },
+				'M': function(date) { return date.getMonth() + 1; },
+				'mm': function(date) { return date.getMonth() + 1; },
+				'm': function(date) { return date.getMonth() + 1; },
+				'dd': function(date) { return date.getDate(); },
+				'd': function(date) { return date.getDate(); }
+			};
+
 			if (parts.length === fparts.length){
 				var cnt;
 				for (i=0, cnt = fparts.length; i < cnt; i++){
@@ -1929,6 +1941,10 @@
 								filtered = $(dates[language].monthsShort).filter(match_part);
 								val = $.inArray(filtered[0], dates[language].monthsShort) + 1;
 								break;
+						}
+						if (afterInputChange !== $.noop && isNaN(val)){
+							var datePart = datePartGetters[part](date);
+							afterInputChange(part, parts[i], datePart);
 						}
 					}
 					parsed[part] = val;

@@ -351,22 +351,63 @@ test('Assume nearby year - this century (+ 13 years, threshold = 30)', patch_dat
     equal(this.input.val(), '02/14/2023');
 }));
 
+test('afterInputChange is called with correct parameters when month is updated', patch_date(function(Date){
+    Date.now = function(){
+        return UTCDate(2024, 6, 6).getTime();
+    };
+    var updatedMonth = "2";
+    var updatedMonth = "02";
+
+    this.input
+        .val(updatedMonth + '/10/2023')
+        .datepicker({format: 'mm/dd/yyyy',
+        afterInputChange: function(inputChange, dateOld, dateNew) {
+            equal(inputChange, "mm", 'Month should be passed to afterInputChange');
+            equal(dateOld, updatedMonth, 'Old month should be correctly passed to afterInputChange');
+            equal(dateNew, updatedMonth, 'New month should be correctly passed to afterInputChange');
+        }
+        })
+        .datepicker('setValue');
+    equal(this.input.val(), '02/10/2023');
+}));
+
 test('afterInputChange is called with correct parameters when day is updated', patch_date(function(Date){
     Date.now = function(){
         return UTCDate(2024, 6, 6).getTime();
     };
-    var originalDay = "2";
-    var updatedDay = "02";
+    var originalDay = "Monday";
+    var updatedDay = "06";
 
     this.input
-        .val('2/10/2023')
+        .val('02/' + originalDay + '/2023')
         .datepicker({format: 'mm/dd/yyyy',
         afterInputChange: function(inputChange, dateOld, dateNew) {
-            equal(inputChange, "day", 'Day should be passed to afterInputChange');
+            equal(inputChange, "dd", 'Day should be passed to afterInputChange');
             equal(dateOld, originalDay, 'Old day should be correctly passed to afterInputChange');
             equal(dateNew, updatedDay, 'New day should be correctly passed to afterInputChange');
         }
         })
         .datepicker('setValue');
-    equal(this.input.val(), '02/10/2023');
+    equal(this.input.val(), '02/06/2023');
+}));
+
+test('afterInputChange is called with correct parameters when two digit year is updated', patch_date(function(Date){
+    Date.now = function(){
+        return UTCDate(2024, 6, 6).getTime();
+    };
+    var originalYear = "24";
+    var updatedYear = "2024";
+
+    this.input
+        .val('02/06/' + originalYear)
+        .datepicker({format: 'mm/dd/yyyy',
+        assumeNearbyYear: true,
+        afterInputChange: function(inputChange, dateOld, dateNew) {
+            equal(inputChange, "yyyy", 'Day should be passed to afterInputChange');
+            equal(dateOld, originalYear, 'Old day should be correctly passed to afterInputChange');
+            equal(dateNew, updatedYear, 'New day should be correctly passed to afterInputChange');
+        }
+        })
+        .datepicker('setValue');
+    equal(this.input.val(), '02/06/2024');
 }));
