@@ -119,7 +119,7 @@ Function(inputChange, dateOld, dateNew). Default: $.noop
 
 A function that is called after the input value of the datepicker has changed. It takes three parameters:
 
-* inputChange: A string that indicates the part of the date that was changed. For example, 'year', 'month', 'day'.
+* inputChange: A string that indicates the part of the date that was changed. For example, 'yyyy', 'mm', 'dd'.
 * dateOld: The old date value before the change.
 * dateNew: The new date value after the change.
 
