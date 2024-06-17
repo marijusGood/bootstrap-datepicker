@@ -410,6 +410,8 @@ test('afterInputChange is called with correct parameters when two digit year is 
         })
         .datepicker('setValue');
     equal(this.input.val(), '02/06/2024');
+}));
+
 test('Convert month `February` to number `02`, monthNameToNumber === true', patch_date(function(Date){
     Date.now = function(){
         return UTCDate(2024, 6, 6).getTime();
