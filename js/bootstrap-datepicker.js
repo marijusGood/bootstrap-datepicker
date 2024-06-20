@@ -791,6 +791,9 @@
 				return DPGlobal.parseDate(date, this.o.format, this.o.language, this.o.assumeNearbyYear, this.o.monthNameToNumber, this.o.afterInputChange);
 			}, this));
 			dates = $.grep(dates, $.proxy(function(date){
+				if (this.o.afterInputChange !== $.noop){
+					this.dateWithinRangeLog(date);
+				}
 				return (
 					!this.dateWithinRange(date) ||
 					!date
@@ -1409,6 +1412,17 @@
 			return date >= this.o.startDate && date <= this.o.endDate;
 		},
 
+		dateWithinRangeLog: function(date){
+			let format = DPGlobal.parseFormat(this.o.format);
+			let language = this.o.language;
+			if (date < this.o.startDate) {
+				this.o.afterInputChange('outOfRange_tooEarly', DPGlobal.formatDate(date, format, language), DPGlobal.formatDate(this.o.startDate, format, language));
+			}
+			if (date > this.o.endDate) {
+				this.o.afterInputChange('outOfRange_tooLate', DPGlobal.formatDate(date, format, language), DPGlobal.formatDate(this.o.endDate, format, language));
+			}
+		},
+
 		keydown: function(e){
 			if (!this.picker.is(':visible')){
 				if (e.keyCode === 40 || e.keyCode === 27) { // allow down to re-show picker
@@ -1865,14 +1879,14 @@
 						var updatedYear = d.setUTCFullYear(assumeNearby ? applyNearbyYear(v, assumeNearby) : v);
 						var updatedYearValue = new Date(updatedYear).getFullYear();
 						if (afterInputChange !== $.noop && v !== updatedYearValue){
-							afterInputChange('yyyy', v, new Date(updatedYear).getFullYear());
+							afterInputChange('yyyy', v.toString(), new Date(updatedYear).getFullYear());
 						}
 						return updatedYear;
 					},
 					m: function(d,v){
 						if (isNaN(d)) {
 							if (afterInputChange !== $.noop){
-								afterInputChange('m', v, new Date(d).getDay());
+								afterInputChange('m', v.toString(), new Date(d).getDay());
 							}
 							return d;
 						}
@@ -1884,7 +1898,7 @@
 							d.setUTCDate(d.getUTCDate()-1);
 						var updatedMonth = new Date(d).getMonth();
 						if (afterInputChange !== $.noop && v !== updatedMonth){
-							afterInputChange('m', v+1, new Date(d).getMonth()+1);
+							afterInputChange('m', (v+1).toString(), new Date(d).getMonth()+1);
 						}
 						return d;
 					},
@@ -1892,7 +1906,7 @@
 						var updatedDate = d.setUTCDate(v);
 						var updatedDay = new Date(updatedDate).getDate();
 						if (afterInputChange !== $.noop && v !== updatedDay){
-							afterInputChange('d', v, new Date(updatedDate).getDate());
+							afterInputChange('d', v.toString(), new Date(updatedDate).getDate());
 						}
 						return updatedDate;
 					}
@@ -1931,12 +1945,18 @@
 				var cnt;
 				for (i=0, cnt = fparts.length; i < cnt; i++){
 					val = parseInt(parts[i], 10);
+					if(isNaN(parts[i]) && !isNaN(val) && afterInputChange !== $.noop) {
+						afterInputChange(fparts[i], parts[i], val);
+					}
 					part = fparts[i];
 					if (isNaN(val)){
 						if (part === 'mm' && monthNameToNumber) {
 							filtered = $(dates[language].monthsShort).filter(match_part);
 							if (filtered[0] !== undefined) {
 								val = $.inArray(filtered[0], dates[language].monthsShort) + 1;
+								if(!isNaN(val) && afterInputChange !== $.noop){
+									afterInputChange('mm', parts[i].toString(), val.toString());
+								}
 							}
 						}
 						switch (part){
@@ -1951,7 +1971,7 @@
 						}
 						if (afterInputChange !== $.noop && isNaN(val)){
 							var datePart = datePartGetters[part](date);
-							afterInputChange(part, parts[i], datePart);
+							afterInputChange(part.toString(), parts[i].toString(), datePart.toString());
 						}
 					}
 					parsed[part] = val;
@@ -1965,6 +1985,10 @@
 						if (!isNaN(_date))
 							date = _date;
 					}
+				}
+			} else {
+				if(afterInputChange !== $.noop){
+					afterInputChange('noValidDateFound', parts.join(""), DPGlobal.formatDate(date, format, language));
 				}
 			}
 			return date;
