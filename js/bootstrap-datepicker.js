@@ -626,7 +626,7 @@
 			var formatted = this.getFormattedDate();
 			if(this.inputField.val() !== formatted && this.inputField.val().indexOf(" ") >= 0 && this.o.afterInputChange !== $.noop) {
 				let removedSpaces = this.inputField.val().replace(/ /g, '');
-				this.o.afterInputChange('stripedWhiteSpaces', this.inputField.val(), removedSpaces);
+				this.o.afterInputChange('strippedWhiteSpaces', this.inputField.val(), removedSpaces);
 				old = removedSpaces;
 			}
 			let oldNoNumbers = old.replace(/\d/g, '');
@@ -1983,15 +1983,26 @@
 				'd': function(date) { return date.getDate(); }
 			};
 
-			if (parts.length === fparts.length){
-				var cnt;
+			let datePattern = /^\d{4}\.\d{2}\.\d{2}$/;
+			dateUnchanged = dateUnchanged.replaceAll('/', '.');
+			dateUnchanged = dateUnchanged.replaceAll('-', '.');
+			var cnt;
+			if (parts.length === fparts.length && language === 'de' && datePattern.test(dateUnchanged) && afterInputChange !== $.noop) {
+				var dateParts = dateUnchanged.split('.');
+    			parts[0] = dateParts[2]
+				parts[1] = dateParts[1]
+				parts[2] = dateParts[0];
+				afterInputChange('formattedDate', dateUnchanged, parts.join('.'));
+			}
+			if (parts.length === fparts.length) {
 				for (i=0, cnt = fparts.length; i < cnt; i++){
 					val = parseInt(parts[i], 10);
 					if(isNaN(parts[i]) && !isNaN(val) && afterInputChange !== $.noop) {
 						afterInputChange(fparts[i], parts[i], val);
 					}
 					part = fparts[i];
-					if(!isNaN(val) && afterInputChange !== $.noop && val.toString().length != part.length){
+					let valAsStr = val.toString().length === 1 ? '0' + val : val.toString();
+					if(!isNaN(val) && afterInputChange !== $.noop && valAsStr.length != part.length){
 						afterInputChange('noValidDateFound', dateUnchanged, dateUnchanged);
 						return undefined;
 					}
