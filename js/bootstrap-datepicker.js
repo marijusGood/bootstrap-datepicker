@@ -256,6 +256,7 @@
 
 			var format = DPGlobal.parseFormat(o.format);
 			if (o.startDate !== -Infinity){
+				o.assumeNearbyYear = true;
 				if (!!o.startDate){
 					if (o.startDate instanceof Date)
 						o.startDate = this._local_to_utc(this._zero_time(o.startDate));
@@ -267,6 +268,7 @@
 				}
 			}
 			if (o.endDate !== Infinity){
+				o.assumeNearbyYear = true;
 				if (!!o.endDate){
 					if (o.endDate instanceof Date)
 						o.endDate = this._local_to_utc(this._zero_time(o.endDate));
@@ -359,11 +361,16 @@
 		},
 		_buildEvents: function(){
             var events = {
-                keyup: $.proxy(function(e){
-                    if ($.inArray(e.keyCode, [27, 37, 39, 38, 40, 32, 13, 9]) === -1)
-                        this.update();
-                }, this),
-                keydown: $.proxy(this.keydown, this),
+                input: $.proxy(function(e){
+					this.inputModified = true;
+				}, this),
+				focusout: $.proxy(function(e){
+					if (this.inputModified && $.inArray(e.keyCode, [27, 37, 39, 38, 40, 32, 13, 9]) === -1) {
+						this.update();
+						this.inputModified = false; // reset the flag
+					}
+				}, this),
+                // keydown: $.proxy(this.keydown, this),
                 paste: $.proxy(this.paste, this)
             };
 
@@ -390,7 +397,7 @@
 				this._events = [
 					[this.element, {
 						click: $.proxy(this.show, this),
-						keydown: $.proxy(this.keydown, this)
+						// keydown: $.proxy(this.keydown, this)
 					}]
 				];
 			}
@@ -615,7 +622,26 @@
 		remove: alias('destroy', 'Method `remove` is deprecated and will be removed in version 2.0. Use `destroy` instead'),
 
 		setValue: function(){
+			let old = this.inputField.val();
 			var formatted = this.getFormattedDate();
+			if(this.inputField.val() !== formatted && this.inputField.val().indexOf(" ") >= 0 && this.o.afterInputChange !== $.noop) {
+				let removedSpaces = this.inputField.val().replace(/ /g, '');
+				this.o.afterInputChange('stripedWhiteSpaces', this.inputField.val(), removedSpaces);
+				old = removedSpaces;
+			}
+			let oldNoNumbers = old.replace(/\d/g, '');
+			if(oldNoNumbers.length > 0 && (oldNoNumbers[0] == '-' || oldNoNumbers[0] == '/' || oldNoNumbers[0] == '.')) {
+				oldNoNumbers = oldNoNumbers[0];
+				let formattedNoNumbers = formatted.replace(/\d/g, '');
+				if(formattedNoNumbers.length > 0) {
+					formattedNoNumbers = formattedNoNumbers[0];
+				}
+				if(this.inputField.val() !== formatted && this.o.afterInputChange !== $.noop && oldNoNumbers !== formattedNoNumbers
+				&& formattedNoNumbers.length > 0) {
+					formattedNoNumbers = formattedNoNumbers[0];
+					this.o.afterInputChange('formattedSeparators', old, formatted);
+				}
+			}
 			this.inputField.val(formatted);
 			return this;
 		},
@@ -623,11 +649,17 @@
 		getFormattedDate: function(format){
 			if (format === undefined)
 				format = this.o.format;
-
 			var lang = this.o.language;
-			return $.map(this.dates, function(d){
-				return DPGlobal.formatDate(d, format, lang);
-			}).join(this.o.multidateSeparator);
+			if(!this.inputModified) {
+				return $.map(this.dates, function(d){
+					return DPGlobal.formatDate(d, format, lang);
+				}).join(this.o.multidateSeparator);
+			}
+		
+			let removedSpaces = this.inputField.val().replace(/ /g, '');
+			
+			let date = DPGlobal.parseDate(removedSpaces, this.o.format, this.o.language, this.o.assumeNearbyYear, this.o.monthNameToNumber, this.o.afterInputChange);
+			return DPGlobal.formatDate(date, format, lang);
 		},
 
 		getStartDate: function(){
@@ -1535,6 +1567,7 @@
 	};
 
 	var DateRangePicker = function(element, options){
+		this.inputModified = false;
 		$.data(element, 'datepicker', this);
 		this.element = $(element);
 		this.inputs = $.map(options.inputs, function(i){
@@ -1819,6 +1852,7 @@
 			return {separators: separators, parts: parts};
 		},
 		parseDate: function(date, format, language, assumeNearby, monthNameToNumber, afterInputChange){
+			let dateUnchanged = date;
 			if (!date)
 				return undefined;
 			if (date instanceof Date)
@@ -1880,6 +1914,8 @@
 						var updatedYearValue = new Date(updatedYear).getFullYear();
 						if (afterInputChange !== $.noop && v !== updatedYearValue){
 							afterInputChange('yyyy', v.toString(), new Date(updatedYear).getFullYear());
+						} else {
+							afterInputChange('d',"remove", "remove");
 						}
 						return updatedYear;
 					},
@@ -1887,6 +1923,8 @@
 						if (isNaN(d)) {
 							if (afterInputChange !== $.noop){
 								afterInputChange('m', v.toString(), new Date(d).getDay());
+							} else {
+								afterInputChange('d',"remove", "remove");
 							}
 							return d;
 						}
@@ -1899,6 +1937,8 @@
 						var updatedMonth = new Date(d).getMonth();
 						if (afterInputChange !== $.noop && v !== updatedMonth){
 							afterInputChange('m', (v+1).toString(), new Date(d).getMonth()+1);
+						} else {
+							afterInputChange('d',"remove", "remove");
 						}
 						return d;
 					},
@@ -1907,6 +1947,8 @@
 						var updatedDay = new Date(updatedDate).getDate();
 						if (afterInputChange !== $.noop && v !== updatedDay){
 							afterInputChange('d', v.toString(), new Date(updatedDate).getDate());
+						} else {
+							afterInputChange('d',"remove", "remove");
 						}
 						return updatedDate;
 					}
@@ -1949,6 +1991,15 @@
 						afterInputChange(fparts[i], parts[i], val);
 					}
 					part = fparts[i];
+					if(!isNaN(val) && afterInputChange !== $.noop && val.toString().length != part.length){
+						afterInputChange('noValidDateFound', dateUnchanged, dateUnchanged);
+						return undefined;
+					}
+					if(!isNaN(val) && ('mm' == part || 'dd' == part) && val < 10 && 
+					parts[i].length < 2 && afterInputChange !== $.noop){
+						afterInputChange(fparts[i], val, '0' + val);
+					}
+					
 					if (isNaN(val)){
 						if (part === 'mm' && monthNameToNumber) {
 							filtered = $(dates[language].monthsShort).filter(match_part);
@@ -1974,6 +2025,10 @@
 							afterInputChange(part.toString(), parts[i].toString(), datePart.toString());
 						}
 					}
+					if (isNaN(val) && afterInputChange !== $.noop){
+						afterInputChange('noValidDateFound', parts[i], DPGlobal.formatDate(date, format, language));
+						return undefined;
+					}
 					parsed[part] = val;
 				}
 				var _date, s;
@@ -1989,6 +2044,7 @@
 			} else {
 				if(afterInputChange !== $.noop){
 					afterInputChange('noValidDateFound', parts.join(""), DPGlobal.formatDate(date, format, language));
+					return undefined;
 				}
 			}
 			return date;
