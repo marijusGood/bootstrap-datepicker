@@ -1986,7 +1986,6 @@
 			let datePattern = /^\d{4}\.\d{2}\.\d{2}$/;
 			dateUnchanged = dateUnchanged.replaceAll('/', '.');
 			dateUnchanged = dateUnchanged.replaceAll('-', '.');
-			var cnt;
 			if (parts.length === fparts.length && language === 'de' && datePattern.test(dateUnchanged) && afterInputChange !== $.noop) {
 				var dateParts = dateUnchanged.split('.');
     			parts[0] = dateParts[2]
@@ -1994,6 +1993,7 @@
 				parts[2] = dateParts[0];
 				afterInputChange('formattedDate', dateUnchanged, parts.join('.'));
 			}
+			var cnt;
 			if (parts.length === fparts.length) {
 				for (i=0, cnt = fparts.length; i < cnt; i++){
 					val = parseInt(parts[i], 10);
@@ -2002,7 +2002,11 @@
 					}
 					part = fparts[i];
 					let valAsStr = val.toString().length === 1 ? '0' + val : val.toString();
-					if(!isNaN(val) && afterInputChange !== $.noop && valAsStr.length != part.length){
+					let partsAreNotEqual = valAsStr.length != part.length;
+					if(partsAreNotEqual && part.includes('y') && (val.toString().length == 4 || val.toString().length == 2)){
+						partsAreNotEqual = false;
+					}
+					if(!isNaN(val) && afterInputChange !== $.noop && partsAreNotEqual){
 						afterInputChange('noValidDateFound', dateUnchanged, dateUnchanged);
 						return undefined;
 					}
