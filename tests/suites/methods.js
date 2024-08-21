@@ -2,7 +2,8 @@ module('Methods', {
     setup: function(){
         this.input = $('<input type="text" value="31-03-2011">')
                         .appendTo('#qunit-fixture')
-                        .datepicker({format: "dd-mm-yyyy"});
+                        .datepicker({format: "dd-mm-yyyy"
+                        });
         this.dp = this.input.data('datepicker');
         this.picker = this.dp.picker;
     },
@@ -10,6 +11,8 @@ module('Methods', {
         this.dp.remove();
     }
 });
+
+var afterInput = function(a, b, c) {}
 
 test('remove', function(){
     var returnedObject = this.dp.remove();
@@ -167,21 +170,35 @@ test('moveMonth - can handle invalid date', function(){
 });
 
 test('parseDate - outputs correct value', function(){
-    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('11/13/2015', $.fn.datepicker.DPGlobal.parseFormat('mm/dd/yyyy'), 'en');
+    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('11/13/2015', $.fn.datepicker.DPGlobal.parseFormat('mm/dd/yyyy'), 'en', true, true, afterInput);
     equal(parsedDate.getUTCDate(), "13", "date is correct");
     equal(parsedDate.getUTCMonth(), "10", "month is correct");
     equal(parsedDate.getUTCFullYear(), "2015", "fullyear is correct");
 });
 
+test('parseDate - parse date not full year and day', function(){
+    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('9/13/65', $.fn.datepicker.DPGlobal.parseFormat('mm/dd/yyyy'), 'en', true, true, afterInput);
+    equal(parsedDate.getUTCDate(), "13", "date is correct");
+    equal(parsedDate.getUTCMonth(), "08", "month is correct");
+    equal(parsedDate.getUTCFullYear(), "1965", "fullyear is correct");
+});
+
+test('parseDate - dots to /', function(){
+    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('1995.02.11', $.fn.datepicker.DPGlobal.parseFormat('mm/dd/yyyy'), 'de', true, true, afterInput);
+    equal(parsedDate.getUTCDate(), "02", "date is correct");
+    equal(parsedDate.getUTCMonth(), "10", "month is correct");
+    equal(parsedDate.getUTCFullYear(), "1995", "fullyear is correct");
+});
+
 test('parseDate - outputs correct value for yyyy\u5E74mm\u6708dd\u65E5 format', function(){
-    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('2015\u5E7411\u670813', $.fn.datepicker.DPGlobal.parseFormat('yyyy\u5E74mm\u6708dd\u65E5'), 'ja');
+    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('2015\u5E7411\u670813', $.fn.datepicker.DPGlobal.parseFormat('yyyy\u5E74mm\u6708dd\u65E5'), 'ja', true, true, afterInput);
     equal(parsedDate.getUTCDate(), "13", "date is correct");
     equal(parsedDate.getUTCMonth(), "10", "month is correct");
     equal(parsedDate.getUTCFullYear(), "2015", "fullyear is correct");
 });
 
 test('parseDate - outputs correct value for dates containing unicodes', function(){
-    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('\u5341\u4E00\u6708 13 2015', $.fn.datepicker.DPGlobal.parseFormat('MM dd yyyy'), 'zh-CN');
+    var parsedDate = $.fn.datepicker.DPGlobal.parseDate('\u5341\u4E00\u6708 13 2015', $.fn.datepicker.DPGlobal.parseFormat('MM dd yyyy'), 'zh-CN', true, true, afterInput);
     equal(parsedDate.getUTCDate(), "13", "date is correct");
     equal(parsedDate.getUTCMonth(), "10", "month is correct");
     equal(parsedDate.getUTCFullYear(), "2015", "fullyear is correct");
